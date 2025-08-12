@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>インバウンド100チャレ　カタマリ即答トレーニング（Are we allowed to 編）</title>
+<style>
+  :root{
+    --green:#059669; --green-d:#047857; --ink:#111; --card:#fff; --bg:#f6f7fb; --muted:#64748b; 
+    --accent:#e0f2fe; --border:#e5e7eb; --orange:#d97706; --blue:#2563eb;
+    --full:#f97316; --full-d:#ea580c;
+  }
+  *{box-sizing:border-box}
+  body{margin:0; background:var(--bg); color:var(--ink);
+       font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans JP","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,Arial,sans-serif; line-height:1.7}
+  .wrap{max-width:920px; margin:0 auto; padding:16px 16px 48px}
+  .title{font-weight:800; text-align:center; margin:8px 0 4px; font-size:22px}
+  .subtitle{ text-align:center; color:#334155; margin:0 0 12px }
+  .subtitle .key{font-weight:800; color:var(--blue)}
+  .toolbar{display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin:8px 0 16px}
+  .modebtn{padding:12px 16px; font-size:16px; border:1px solid #cbd5e1; border-radius:10px; background:#fff; cursor:pointer}
+  .modebtn.active{background:#e2e8f0; border-color:#94a3b8}
+  .legend{font-size:12px; text-align:center; color:#64748b; margin-bottom:10px}
+  h2{color:var(--orange); margin:26px 0 10px}
+  .set{background:var(--card); border:1px solid var(--border); border-radius:14px; padding:16px; margin:14px 0; box-shadow:0 1px 3px rgba(0,0,0,.05)}
+  .abline{margin-bottom:8px}
+  .label{font-size:13px; color:#475569; margin:12px 0 6px}
+  .chunklist{display:flex; flex-direction:column; gap:10px}
+  .chunk{display:flex; flex-direction:column; gap:6px}
+  /* Green chunk buttons */
+  .jpbtn{width:100%; text-align:left; padding:14px 16px; font-size:18px; border:none; border-radius:10px; background:var(--green); color:#fff; cursor:pointer; margin:10px 0;}
+  .jpbtn:hover{background:var(--green-d)}
+  .en{padding:10px 12px; border-left:4px solid var(--green); background:#f0fdf4; border-radius:8px}
+  /* Full conversation buttons (ORANGE) */
+  .convbtn{width:100%; text-align:left; padding:14px 16px; font-size:18px; border:1px solid var(--border); border-radius:10px; background:#fff; color:var(--ink); cursor:pointer; margin:10px 0;}
+  .fullbtn{background:var(--full); color:#fff; border-color:var(--full); margin:10px 0;}
+  .fullbtn:hover{background:var(--full-d)}
+  .fullen{padding:10px 12px; border-left:4px solid var(--full); background:#fff7ed; border-radius:8px}
+  .divider{height:1px; background:var(--border); margin:16px 0}
+  @media (max-width:600px){
+    .title{font-size:20px}
+    .jpbtn,.convbtn{font-size:20px; padding:16px 18px}
+    .modebtn{font-size:15px; padding:12px 14px}
+  }
+  /* Use [hidden] attribute for robust show/hide */
+</style>
+<script>
+  const DATA = [
+    {
+      aJP:"このパビリオンの中で写真や動画を撮ってもいいですか？",
+      bJP:"エリアによります。一部のエリアではどちらもOKですが、ダメなところもあります。",
+      aChunks:[
+        ["可能？","Are we allowed to"],
+        ["写真や動画撮る","take photos and videos"],
+        ["パビリオンの中で","inside the pavilion?"]
+      ],
+      bChunks:[
+        ["エリアによる","It depends on the area."],
+        ["一部OK","Some parts allow both,"],
+        ["ダメなところも","but others don’t."]
+      ],
+      aEN:"Are we allowed to/ take photos and videos / inside the pavilion?",
+      bEN:"It depends on the area. / Some parts allow both, / but others don’t."
+    },
+    {
+      aJP:"大屋根リングの上ではどこでも座っていいですか？",
+      bJP:"場所によります。一部の場所では座れますが、座れないところもあります。",
+      aChunks:[["可能？","Are we allowed to"],["どこでも座る","sit anywhere"],["大屋根リングで","on the Grand Ring?"]],
+      bChunks:[["場所による","It depends on the area."],["一部座れる","Some parts allow sitting,"],["座れないところも","but others don’t."]],
+      aEN:"Are we allowed to/ sit anywhere / on the Grand Ring?",
+      bEN:"It depends on the area. / Some parts allow sitting, / but others don’t."
+    },
+    {
+      aJP:"パビリオンは再入場可能ですか？",
+      bJP:"パビリオンによります。再入場できるところもあれば、できないところもあります。",
+      aChunks:[["可能？","Are we allowed to"],["再入場する","re-enter"],["パビリオンに","a pavilion?"]],
+      bChunks:[["パビリオンによる","It depends on the pavilion."],["再入場OK","Some allow re-entry,"],["できないところも","but others don’t."]],
+      aEN:"Are we allowed to/ re-enter / a pavilion?",
+      bEN:"It depends on the pavilion. / Some allow re-entry, / but others don’t."
+    },
+    {
+      aJP:"タトゥーがあっても温泉を利用できますか？",
+      bJP:"施設によります。タトゥーを許可しているところもあれば、禁止されているところもあります。",
+      aChunks:[["可能？","Are we allowed to"],["温泉使う","use the hot spring"],["タトゥーあっても","if we have tattoos?"]],
+      bChunks:[["施設による","It depends on the facility."],["タトゥーOK","Some allow tattoos,"],["禁止のところも","but others don’t."]],
+      aEN:"Are we allowed to/ use the hot spring / if we have tattoos?",
+      bEN:"It depends on the facility. Some allow tattoos, but others don’t."
+    },
+    {
+      aJP:"乗っている間にスマホを使ってもいいですか？",
+      bJP:"アトラクションによります。スマートフォンの使用が許可されているところもあれば、禁止されているところもあります。",
+      aChunks:[["可能？","Are we allowed to"],["スマホ使う","use smartphones"],["乗ってる間に","during the ride?"]],
+      bChunks:[["アトラクションによる","It depends on the ride."],["スマホOK","Some allow smartphones,"],["禁止のところも","but others don’t."]],
+      aEN:"Are we allowed to use smartphones during the ride?",
+      bEN:"It depends on the ride. Some allow smartphones, but others don’t."
+    }
+  ];
+
+  let MODE = 'training'; // training: show EN / test: hide EN
+
+  function render(){
+    const root = document.getElementById('root');
+    root.innerHTML = '';
+    DATA.forEach((set, idx) => {
+      const box = document.createElement('div');
+      box.className = 'set';
+
+      // JP A/B full lines
+      box.innerHTML += `<div class="abline"><b>A:</b> ${set.aJP}</div>`;
+      box.innerHTML += `<div class="abline"><b>B:</b> ${set.bJP}</div>`;
+
+      // A chunks
+      box.innerHTML += `<div class="label">A：</div>`;
+      const aWrap = document.createElement('div');
+      aWrap.className = 'chunklist';
+      set.aChunks.forEach((pair, j)=>{
+        const [jp,en] = pair;
+        const id = `en-a-${idx}-${j}`;
+        const c = document.createElement('div'); c.className='chunk';
+        const btn = document.createElement('button'); btn.type='button'; btn.className='jpbtn toggle'; btn.dataset.target=id; btn.textContent=jp;
+        const ans = document.createElement('div'); ans.id=id; ans.className='en'; ans.textContent=en;
+        ans.hidden = (MODE==='test');
+        c.appendChild(btn); c.appendChild(ans); aWrap.appendChild(c);
+      });
+      box.appendChild(aWrap);
+
+      // B chunks
+      box.innerHTML += `<div class="label">B：</div>`;
+      const bWrap = document.createElement('div'); bWrap.className='chunklist';
+      set.bChunks.forEach((pair, j)=>{
+        const [jp,en] = pair;
+        const id = `en-b-${idx}-${j}`;
+        const c = document.createElement('div'); c.className='chunk';
+        const btn = document.createElement('button'); btn.type='button'; btn.className='jpbtn toggle'; btn.dataset.target=id; btn.textContent=jp;
+        const ans = document.createElement('div'); ans.id=id; ans.className='en'; ans.textContent=en;
+        ans.hidden = (MODE==='test');
+        c.appendChild(btn); c.appendChild(ans); bWrap.appendChild(c);
+      });
+      box.appendChild(bWrap);
+
+      // Divider
+      box.appendChild(Object.assign(document.createElement('div'), {className:'divider'}));
+
+      // Full JP buttons -> full EN reveal
+      const aFullId = `full-a-${idx}`;
+      const bFullId = `full-b-${idx}`;
+      const aBtn = document.createElement('button'); aBtn.type='button'; aBtn.className='convbtn fullbtn toggle'; aBtn.dataset.target=aFullId; aBtn.textContent='A: '+set.aJP;
+      const aEn = document.createElement('div'); aEn.id=aFullId; aEn.className='fullen'; aEn.textContent=set.aEN; aEn.hidden=(MODE==='test');
+      const bBtn = document.createElement('button'); bBtn.type='button'; bBtn.className='convbtn fullbtn toggle'; bBtn.dataset.target=bFullId; bBtn.textContent='B: '+set.bJP;
+      const bEn = document.createElement('div'); bEn.id=bFullId; bEn.className='fullen'; bEn.textContent=set.bEN; bEn.hidden=(MODE==='test');
+
+      box.appendChild(aBtn); box.appendChild(aEn);
+      box.appendChild(bBtn); box.appendChild(bEn);
+
+      root.appendChild(box);
+    });
+  }
+
+  // Event delegation (one handler for all buttons)
+  document.addEventListener('click', (ev)=>{
+    const btn = ev.target.closest('.toggle');
+    if(!btn) return;
+    const id = btn.dataset.target;
+    const target = document.getElementById(id);
+    if(!target) return;
+    target.hidden = !target.hidden;
+  });
+
+  function setMode(next){
+    MODE = next;
+    document.getElementById('btnTrain').classList.toggle('active', MODE==='training');
+    document.getElementById('btnTest').classList.toggle('active', MODE==='test');
+    render(); // re-render to reset hidden flags
+  }
+
+  window.addEventListener('DOMContentLoaded', ()=>{
+    render();
+    document.getElementById('btnTrain').addEventListener('click', ()=>setMode('training'));
+    document.getElementById('btnTest').addEventListener('click', ()=>setMode('test'));
+  });
+</script>
+</head>
+<body>
+  <div class="wrap">
+    <div class="title">インバウンド100チャレ　カタマリ即答トレーニング</div>
+    <div class="subtitle"><span class="key">Are we allowed to 編</span></div>
+    <div class="toolbar">
+      <button id="btnTrain" class="modebtn active">トレーニングモード【英語表示】</button>
+      <button id="btnTest" class="modebtn">テストモード【英語非表示】</button>
+    </div>
+    <div class="legend">※ トレーニング：英語が表示された状態（タップで隠す可）／ テスト：英語は非表示（タップで表示）</div>
+    <h2>Are we allowed to ～?（5セット）</h2>
+
+    <div id="root"></div>
+  </div>
+</body>
+</html>

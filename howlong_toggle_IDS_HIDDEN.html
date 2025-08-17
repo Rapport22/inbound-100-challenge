@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>インバウンド100チャレ　カタマリ即答トレーニング（How long 編）</title>
+<style>
+  :root{
+    --green:#059669; --green-d:#047857; --ink:#111; --card:#fff; --bg:#f6f7fb; --muted:#64748b; 
+    --border:#e5e7eb; --orange:#d97706; --blue:#2563eb;
+    --full:#f97316; --full-d:#ea580c;
+  }
+  *{box-sizing:border-box}
+  body{margin:0; background:var(--bg); color:var(--ink);
+       font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans JP","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,Arial,sans-serif; line-height:1.7}
+  .wrap{max-width:920px; margin:0 auto; padding:16px 16px 48px}
+  .title{font-weight:800; text-align:center; margin:8px 0 4px; font-size:22px}
+  .subtitle{ text-align:center; color:#334155; margin:0 0 12px }
+  .subtitle .key{font-weight:800; color:var(--blue)}
+  .toolbar{display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin:8px 0 16px}
+  .modebtn{padding:12px 16px; font-size:16px; border:1px solid #cbd5e1; border-radius:10px; background:#fff; cursor:pointer}
+  .modebtn.active{background:#e2e8f0; border-color:#94a3b8}
+  .legend{font-size:12px; text-align:center; color:#64748b; margin-bottom:10px}
+  h2{color:var(--orange); margin:26px 0 10px}
+  .set{background:var(--card); border:1px solid var(--border); border-radius:14px; padding:16px; margin:14px 0; box-shadow:0 1px 3px rgba(0,0,0,.05)}
+  .abline{margin-bottom:8px}
+  .label{font-size:13px; color:#475569; margin:12px 0 6px}
+  .chunklist{display:flex; flex-direction:column; gap:10px}
+  .chunk{display:flex; flex-direction:column; gap:6px}
+  /* Green chunk buttons */
+  .jpbtn{width:100%; text-align:left; padding:14px 16px; font-size:18px; border:none; border-radius:10px; background:var(--green); color:#fff; cursor:pointer; margin:10px 0;}
+  .jpbtn:hover{background:var(--green-d)}
+  .en{padding:10px 12px; border-left:4px solid var(--green); background:#f0fdf4; border-radius:8px}
+  /* Full conversation buttons (ORANGE) */
+  .convbtn{width:100%; text-align:left; padding:14px 16px; font-size:18px; border:1px solid var(--border); border-radius:10px; background:#fff; color:#000; cursor:pointer; margin:10px 0;}
+  .fullbtn{background:var(--full); color:#fff; border-color:var(--full); margin:10px 0;}
+  .fullbtn:hover{background:var(--full-d)}
+  .fullen{padding:10px 12px; border-left:4px solid var(--full); background:#fff7ed; border-radius:8px}
+  .divider{height:1px; background:var(--border); margin:16px 0}
+  @media (max-width:600px){
+    .title{font-size:20px}
+    .jpbtn,.convbtn{font-size:20px; padding:16px 18px}
+    .modebtn{font-size:15px; padding:12px 14px}
+  }
+</style>
+<script>
+  const DATA = [
+    {
+      aJP:"このパビリオン、予約なしで入るのにどのくらいかかりますか？",
+      bJP:"混んでいるときは、だいたい1時間くらいです。",
+      aChunks:[
+        ["どのくらいかかる？","How long will it take to"],
+        ["予約なしで入る","get into this pavilion"],
+        ["補足","without a reservation?"]
+      ],
+      bChunks:[
+        ["ふつうは1時間","It usually takes about an hour"],
+        ["混んでると","if it’s busy."]
+      ],
+      aEN:"How long will it take to / get into this pavilion / without a reservation?",
+      bEN:"It usually takes about an hour / if it’s busy."
+    },
+    {
+      aJP:"オーストラリアパビリオンを見て回るのにどれくらい時間がかかりますか？",
+      bJP:"オーストラリアパビリオンを回り終えるのに通常20～30分かかります。",
+      aChunks:[
+        ["どのくらいかかる？","How long does it take to"],
+        ["オーストラリア館回り終える","get through the Australia Pavilion?"]
+      ],
+      bChunks:[
+        ["ふつうは","It usually takes about"],
+        ["20〜30分","20 to 30 minutes"],
+        ["補足","to get through the Australia Pavilion."]
+      ],
+      aEN:"How long does it take to / get through the Australia Pavilion?",
+      bEN:"It usually takes about / 20 to 30 minutes / to get through the Australia Pavilion."
+    },
+    {
+      aJP:"シャトルバスで桜島駅まで行くのにどれくらいかかりますか？",
+      bJP:"ここから桜島駅まで通常15分ほどかかります。",
+      aChunks:[
+        ["どのくらいかかる？","How long does it take to"],
+        ["桜島駅へ行く","get to Sakurajima Station"],
+        ["シャトルバスで","by shuttle bus?"]
+      ],
+      bChunks:[
+        ["ふつうは15分","It usually takes about 15 minutes"],
+        ["補足","to get to Sakurajima Station from here."]
+      ],
+      aEN:"How long does it take to / get to Sakurajima Station / by shuttle bus?",
+      bEN:"It usually takes about 15 minutes / to get to Sakurajima Station from here."
+    },
+    {
+      aJP:"茶道体験はどのくらい時間がかかりますか？",
+      bJP:"だいたい45分くらいです。",
+      aChunks:[
+        ["どのくらいかかる？","How long will it take to"],
+        ["茶道体験を終える","finish the tea ceremony experience?"]
+      ],
+      bChunks:[
+        ["ふつうは45分","It usually takes about 45 minutes."]
+      ],
+      aEN:"How long will it take to / finish the tea ceremony experience?",
+      bEN:"It usually takes about 45 minutes."
+    },
+    {
+      aJP:"このレストランで席に案内されるまでどのくらいかかりますか？",
+      bJP:"混雑時はだいたい30分ほどかかります。",
+      aChunks:[
+        ["どのくらいかかる？","How long will it take to"],
+        ["席につく","get a seat"],
+        ["このレストランで","at this restaurant?"]
+      ],
+      bChunks:[
+        ["ふつうは30分","It usually takes about 30 minutes"],
+        ["混雑時","during peak hours."]
+      ],
+      aEN:"How long will it take to / get a seat / at this restaurant?",
+      bEN:"It usually takes about 30 minutes / during peak hours."
+    }
+  ];
+
+  let MODE = 'training'; // training: show EN / test: hide EN
+
+  function render(){
+    const root = document.getElementById('root');
+    root.innerHTML = '';
+    DATA.forEach((set, idx) => {
+      const box = document.createElement('div');
+      box.className = 'set';
+
+      // JP A/B full lines
+      box.innerHTML += `<div class="abline"><b>A:</b> ${set.aJP}</div>`;
+      box.innerHTML += `<div class="abline"><b>B:</b> ${set.bJP}</div>`;
+
+      // A chunks
+      box.innerHTML += `<div class="label">A：</div>`;
+      const aWrap = document.createElement('div');
+      aWrap.className = 'chunklist';
+      set.aChunks.forEach((pair, j)=>{
+        const [jp,en] = pair;
+        const id = `en-a-${idx}-${j}`;
+        const c = document.createElement('div'); c.className='chunk';
+        const btn = document.createElement('button'); btn.type='button'; btn.className='jpbtn toggle'; btn.dataset.target=id; btn.textContent=jp;
+        const ans = document.createElement('div'); ans.id=id; ans.className='en'; ans.textContent=en;
+        ans.hidden = (MODE==='test');
+        c.appendChild(btn); c.appendChild(ans); aWrap.appendChild(c);
+      });
+      box.appendChild(aWrap);
+
+      // B chunks
+      box.innerHTML += `<div class="label">B：</div>`;
+      const bWrap = document.createElement('div'); bWrap.className='chunklist';
+      set.bChunks.forEach((pair, j)=>{
+        const [jp,en] = pair;
+        const id = `en-b-${idx}-${j}`;
+        const c = document.createElement('div'); c.className='chunk';
+        const btn = document.createElement('button'); btn.type='button'; btn.className='jpbtn toggle'; btn.dataset.target=id; btn.textContent=jp;
+        const ans = document.createElement('div'); ans.id=id; ans.className='en'; ans.textContent=en;
+        ans.hidden = (MODE==='test');
+        c.appendChild(btn); c.appendChild(ans); bWrap.appendChild(c);
+      });
+      box.appendChild(bWrap);
+
+      // Divider
+      box.appendChild(Object.assign(document.createElement('div'), {className:'divider'}));
+
+      // Full JP buttons -> full EN reveal
+      const aFullId = `full-a-${idx}`;
+      const bFullId = `full-b-${idx}`;
+      const aBtn = document.createElement('button'); aBtn.type='button'; aBtn.className='convbtn fullbtn toggle'; aBtn.dataset.target=aFullId; aBtn.textContent='A: '+set.aJP;
+      const aEn = document.createElement('div'); aEn.id=aFullId; aEn.className='fullen'; aEn.textContent=set.aEN; aEn.hidden=(MODE==='test');
+      const bBtn = document.createElement('button'); bBtn.type='button'; bBtn.className='convbtn fullbtn toggle'; bBtn.dataset.target=bFullId; bBtn.textContent='B: '+set.bJP;
+      const bEn = document.createElement('div'); bEn.id=bFullId; bEn.className='fullen'; bEn.textContent=set.bEN; bEn.hidden=(MODE==='test');
+
+      box.appendChild(aBtn); box.appendChild(aEn);
+      box.appendChild(bBtn); box.appendChild(bEn);
+
+      root.appendChild(box);
+    });
+
+    // Subtitle
+    try{
+      document.getElementById('subtitleKey').textContent = "How long 編";
+      document.getElementById('h2label').textContent = "How long 系（5セット）";
+    }catch(e){}
+  }
+
+  // Event delegation for all toggle buttons
+  document.addEventListener('click', (ev)=>{
+    const btn = ev.target.closest('.toggle');
+    if(!btn) return;
+    const id = btn.dataset.target;
+    const target = document.getElementById(id);
+    if(!target) return;
+    target.hidden = !target.hidden;
+  });
+
+  function setMode(next){
+    MODE = next;
+    document.getElementById('btnTrain').classList.toggle('active', MODE==='training');
+    document.getElementById('btnTest').classList.toggle('active', MODE==='test');
+    render(); // reset hidden flags according to mode
+  }
+
+  window.addEventListener('DOMContentLoaded', ()=>{
+    render();
+    document.getElementById('btnTrain').addEventListener('click', ()=>setMode('training'));
+    document.getElementById('btnTest').addEventListener('click', ()=>setMode('test'));
+  });
+</script>
+</head>
+<body>
+  <div class="wrap">
+    <div class="title">インバウンド100チャレ　カタマリ即答トレーニング</div>
+    <div class="subtitle"><span id="subtitleKey" class="key">How long 編</span></div>
+    <div class="toolbar">
+      <button id="btnTrain" class="modebtn active">トレーニングモード【英語表示】</button>
+      <button id="btnTest" class="modebtn">テストモード【英語非表示】</button>
+    </div>
+    <div class="legend">※ トレーニング：英語が表示された状態（タップで隠す可）／ テスト：英語は非表示（タップで表示）</div>
+    <h2 id="h2label">How long 系（5セット）</h2>
+
+    <div id="root"></div>
+  </div>
+</body>
+</html>

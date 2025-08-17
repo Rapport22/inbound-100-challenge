@@ -1,0 +1,450 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>発音確認ポチッとな</title>
+<style>
+  :root { --bg:#0b1020; --card:#131a2b; --accent:#61dafb; --text:#e6ecf2; --muted:#95a3b8; --border:#26314a; }
+  html, body { height:100%; }
+  body { margin:0; font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial; background:linear-gradient(180deg,#0b1020,#0d1226 40%,#0b1020); color:var(--text); }
+  .container { max-width:980px; margin:24px auto 64px; padding:0 16px; }
+  header { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:16px; }
+  h1 { font-size:clamp(22px,3vw,30px); margin:0; letter-spacing:.2px; }
+  .subtitle { color:var(--muted); font-size:13px; }
+  .card { background:rgba(19,26,43,.9); border:1px solid var(--border); border-radius:16px; padding:16px; box-shadow:0 10px 30px rgba(0,0,0,.25); }
+  .grid { display:grid; grid-template-columns:1.2fr .8fr; gap:16px; }
+  @media (max-width:880px){ .grid { grid-template-columns:1fr; } }
+
+  input[type="text"], select { width:100%; padding:10px 12px; border-radius:12px; border:1px solid var(--border); background:#0e1530; color:#e6ecf2; outline:none; font-size:15px; min-width:0; }
+  input::placeholder { color:#8091aa; }
+  .btn { border:1px solid var(--border); padding:8px 12px; border-radius:10px; background:#0f1836; color:#e6ecf2; cursor:pointer; font-weight:600; font-size:14px; line-height:1; white-space:nowrap; }
+  .btn:hover { filter:brightness(1.1); }
+  .btn.primary { background:#1b2a6b; border-color:#263b93; }
+  .row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+  .badge { font-size:11px; padding:2px 6px; border-radius:999px; border:1px solid var(--border); color:var(--muted); }
+  .muted { color:var(--muted); }
+  .small { font-size:12px; }
+  .ipa { font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace; background:#0e1530; padding:6px 10px; border-radius:10px; border:1px solid var(--border); margin-right:6px; }
+  .def { border:1px solid var(--border); background:#0e1530; border-radius:12px; padding:10px 12px; }
+  .section-title { margin:12px 0 8px; font-weight:700; font-size:15px; }
+
+  /* ✅ 入力260px固定＋ボタンと20px間隔（重なり防止） */
+  .controls{
+    display: grid;
+    grid-template-columns: 260px max-content max-content; /* 入力 / 検索 / クリア */
+    column-gap: 20px;
+    align-items: center;
+  }
+  .controls .input-wrap{ min-width:0; width:260px; }
+  .controls input[type="text"]{ box-sizing:border-box; }
+  @media (max-width:640px){
+    .controls{ grid-template-columns:1fr; row-gap:10px; }
+    .controls .input-wrap{ width:100%; }
+    .controls .btn{ width:100%; }
+  }
+
+  /* サジェストは入力欄内だけに表示 */
+  .suggest{ position:relative; }
+  .suggest-box{
+    position:absolute; top:calc(100% + 6px); left:0; right:0; z-index:20;
+    background:#0e1530; border:1px solid var(--border); border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,.25); overflow:hidden;
+  }
+  .suggest-item{ padding:10px 12px; border-bottom:1px solid var(--border); cursor:pointer; }
+  .suggest-item:hover{ background:#13204a; }
+  .hidden{ display:none; }
+
+  /* 見出しの英語を1行省略表示（…） */
+  .result-word{
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h1>発音確認ポチッとな</h1>
+        <div class="subtitle">
+          単語やフレーズを検索し、お手本と一緒に音声3回リピート！単語検索なら、簡単な意味と例文も参考に見れる！（あくまでも参考程度）
+          AI音声（調整可能）では、速度をゆっくりで発音確認できる！
+        </div>
+      </div>
+    </header>
+
+    <!-- 検索 -->
+    <section class="card" aria-label="検索">
+      <div class="controls" style="margin-bottom:10px;">
+        <div class="input-wrap suggest">
+          <input id="wordInput" type="text" placeholder="例: speak / take a break / 2-3語のフレーズOK" autocomplete="off" />
+          <div id="suggestBox" class="suggest-box hidden"></div>
+        </div>
+        <button class="btn primary" id="btnLookup">検索</button>
+        <button class="btn" id="btnClear">クリア</button>
+      </div>
+      <div class="row small muted">
+        <div>Enterで検索 / ↑↓で候補移動→Enter</div>
+      </div>
+    </section>
+
+    <div class="grid" style="margin-top:16px;">
+      <!-- 左：結果 -->
+      <section class="card">
+        <h3 style="margin-top:0;">結果</h3>
+        <div id="resultArea" class="muted">単語またはフレーズを入力して検索してください。</div>
+      </section>
+
+      <!-- 右：AI音声（調整可能）※ここは1回再生 -->
+      <section class="card">
+        <h3 style="margin-top:0;">AI音声（調整可能）</h3>
+        <div class="def">
+          <div class="small muted">このセクションは1回再生です（速度/ピッチを調整）。</div>
+          <div class="row" style="margin-top:8px;">
+            <div style="flex:1;">
+              <div class="small">音声その1（通常）</div>
+              <select id="voice1"></select>
+              <div class="row" style="margin-top:6px;">
+                <label class="small muted">速度 <input id="rate1" type="range" min="0.5" max="1.5" value="1" step="0.1"></label>
+                <label class="small muted">ピッチ <input id="pitch1" type="range" min="0.5" max="1.5" value="1" step="0.1"></label>
+              </div>
+            </div>
+            <div style="flex:1;">
+              <div class="small">音声その2（ゆっくり）</div>
+              <select id="voice2"></select>
+              <div class="row" style="margin-top:6px;">
+                <label class="small muted">速度 <input id="rate2" type="range" min="0.4" max="1.2" value="0.8" step="0.1"></label>
+                <label class="small muted">ピッチ <input id="pitch2" type="range" min="0.5" max="1.5" value="1" step="0.1"></label>
+              </div>
+            </div>
+          </div>
+          <div class="row" style="margin-top:8px;">
+            <button id="playV1" class="btn primary">▶︎ 音声その1 再生</button>
+            <button id="playV2" class="btn">🐢 音声その2 再生</button>
+            <button id="stopTTS" class="btn">■ 停止</button>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+<script>
+/* ===== DOM ===== */
+const input = document.getElementById('wordInput');
+const btnLookup = document.getElementById('btnLookup');
+const btnClear = document.getElementById('btnClear');
+const resultArea = document.getElementById('resultArea');
+const suggestBox = document.getElementById('suggestBox');
+
+const voice1 = document.getElementById('voice1');
+const rate1 = document.getElementById('rate1');
+const pitch1 = document.getElementById('pitch1');
+const voice2 = document.getElementById('voice2');
+const rate2 = document.getElementById('rate2');
+const pitch2 = document.getElementById('pitch2');
+const playV1 = document.getElementById('playV1');
+const playV2 = document.getElementById('playV2');
+const stopTTS = document.getElementById('stopTTS');
+
+/* ===== State ===== */
+let voices = [];
+let suggestList = [];
+let suggestIndex = -1;
+let currentWord = '';
+let EJ = null; // EJDict
+
+/* ===== Utils ===== */
+const esc = s => (s||'').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const debounce = (fn, ms=250) => { let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a), ms); }; };
+
+/* === 日本語意味キャッシュ（1件） === */
+const JA_CACHE_KEY = 'ph:jaCache:v2mini';
+function _getJaCache(){ try { return JSON.parse(localStorage.getItem(JA_CACHE_KEY)||'{}'); } catch { return {}; } }
+function _setJaCache(obj){ localStorage.setItem(JA_CACHE_KEY, JSON.stringify(obj)); }
+function _putJaCache(word, item){ const cache=_getJaCache(); cache[word.toLowerCase()]={ item, t: Date.now() }; _setJaCache(cache); }
+function _getJaCacheHit(word, maxAgeMs = 1000*60*60*24*30){ const rec=_getJaCache()[word.toLowerCase()]; if(!rec) return null; if(Date.now()-rec.t>maxAgeMs) return null; return rec.item; }
+
+/* === 例文の訳キャッシュ（英→日） === */
+const EX_CACHE_KEY = 'ph:exCache:v1';
+const EX_CACHE_TTL_MS = 1000*60*60*24*60; // 60日
+function _getExCache(){ try { return JSON.parse(localStorage.getItem(EX_CACHE_KEY) || '{}'); } catch { return {}; } }
+function _setExCache(obj){ localStorage.setItem(EX_CACHE_KEY, JSON.stringify(obj)); }
+function _normEN(s){ return String(s || '').trim(); }
+function getCachedTranslation(en){
+  const key = _normEN(en); if (!key) return null;
+  const cache = _getExCache(); const rec = cache[key];
+  if (!rec) return null;
+  if (Date.now() - rec.t > EX_CACHE_TTL_MS) return null;
+  return rec.ja || null;
+}
+function putCachedTranslation(en, ja){
+  const key = _normEN(en); if (!key || !ja) return;
+  const cache = _getExCache(); cache[key] = { ja, t: Date.now() }; _setExCache(cache);
+}
+
+/* ===== EJDict ===== */
+async function loadEJ(){
+  if (EJ) return EJ;
+  try { EJ = await (await fetch('./ejdict-mini.json', { cache:'force-cache' })).json(); }
+  catch{ EJ = {}; }
+  return EJ;
+}
+async function jaFromEJ(word){
+  await loadEJ();
+  return EJ[word.toLowerCase()] || '';
+}
+
+/* ===== Suggest（Datamuse） ===== */
+async function fetchSuggestions(q){
+  if (!q || q.length < 2) { hideSuggest(); return; }
+  try {
+    const r = await fetch('https://api.datamuse.com/sug?s='+encodeURIComponent(q));
+    const data = (await r.json()).slice(0,8);
+    suggestList = data.map(d=>d.word);
+    renderSuggest();
+  } catch { suggestList=[]; renderSuggest(true); }
+}
+input.addEventListener('input', debounce(()=>fetchSuggestions(input.value.trim()), 200));
+function renderSuggest(error=false){
+  if (error) { suggestBox.innerHTML = `<div class="suggest-item">候補の取得に失敗しました。</div>`; suggestBox.classList.remove('hidden'); return; }
+  if (!suggestList.length) { hideSuggest(); return; }
+  suggestBox.innerHTML = suggestList.map((w,i)=>`<div class="suggest-item" data-i="${i}">${esc(w)}</div>`).join('');
+  suggestBox.classList.remove('hidden');
+}
+function hideSuggest(){ suggestBox.classList.add('hidden'); suggestIndex=-1; }
+suggestBox.addEventListener('click',(e)=>{ const el=e.target.closest('.suggest-item'); if(!el)return; const i=+el.dataset.i; if(suggestList[i]) { input.value=suggestList[i]; hideSuggest(); lookup(suggestList[i]); }});
+input.addEventListener('keydown',(e)=>{
+  if (suggestBox.classList.contains('hidden')) { if (e.key==='Enter') btnLookup.click(); return; }
+  if (e.key==='ArrowDown'){ e.preventDefault(); suggestIndex=Math.min(suggestIndex+1, suggestList.length-1); highlightSuggest(); }
+  else if (e.key==='ArrowUp'){ e.preventDefault(); suggestIndex=Math.max(suggestIndex-1, 0); highlightSuggest(); }
+  else if (e.key==='Enter'){ e.preventDefault(); if (suggestIndex>=0 && suggestList[suggestIndex]){ input.value=suggestList[suggestIndex]; hideSuggest(); lookup(suggestList[suggestIndex]); } else { hideSuggest(); btnLookup.click(); } }
+  else if (e.key==='Escape'){ hideSuggest(); }
+});
+function highlightSuggest(){ [...suggestBox.children].forEach((el,i)=> el.style.background = (i===suggestIndex)?'#13204a':'' ); }
+
+/* ===== Free Dictionary API ===== */
+async function lookup(text){
+  hideSuggest();
+  const word = text.trim();
+  currentWord = word;
+  resultArea.textContent = '検索中…';
+  try {
+    const r = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`);
+    let data = [];
+    if (r.ok) data = await r.json();
+
+    if (!Array.isArray(data) || !data.length){
+      renderTTSOnly(word, '辞書データが見つかりませんでした。フレーズ読み上げモードです。');
+      return;
+    }
+    renderResult(word, data);
+  } catch (e){
+    console.error(e);
+    renderTTSOnly(word, '取得に失敗しました。読み上げのみ可能です。');
+  }
+}
+
+/* ===== フレーズ用：TTS専用描画 ===== */
+function renderTTSOnly(text, note){
+  const safe = esc(text);
+  resultArea.innerHTML = `
+    <div class="row" style="align-items:flex-end; justify-content:space-between;">
+      <div style="flex:1;">
+        <div class="small muted">フレーズ</div>
+        <h2 class="result-word" title="${safe}" style="margin:4px 0 6px;">${safe}</h2>
+        <div class="muted small">（IPA/意味/例文は辞書未ヒットのため省略）</div>
+      </div>
+      <div class="row" style="flex:0 0 auto; gap:8px;">
+        <button onclick="speakThrice('${safe}', voice1.value, rate1.value, pitch1.value)" class="btn primary">▶︎ 音声その1（3回）</button>
+        <button onclick="speakThrice('${safe}', voice2.value, rate2.value, pitch2.value)" class="btn">🐢 音声その2（3回）</button>
+        <button onclick="speechSynthesis.cancel()" class="btn">■ 停止</button>
+      </div>
+    </div>
+    ${note ? `<div class="def small muted" style="margin-top:8px;">${esc(note)}</div>` : '' }
+  `;
+  localStorage.setItem('ph:lastWord', text);
+}
+
+function collectPhonetics(entries){
+  const out=[]; const seen=new Set();
+  for(const e of entries) for(const p of (e.phonetics||[])){
+    let text=p.text||''; let audio=p.audio||'';
+    if (audio && audio.startsWith('//')) audio='https:'+audio;
+    const k=text+'|'+audio; if ((text||audio) && !seen.has(k)){ seen.add(k); out.push({text,audio}); }
+  }
+  return out;
+}
+function firstEnglishDef(entries){
+  for(const e of entries) for(const m of (e.meanings||[])) for(const d of (m.definitions||[])){
+    if (d.definition) return { pos: (m.partOfSpeech||'').toLowerCase(), def: d.definition };
+  }
+  return null;
+}
+function firstDictExample(entries){
+  for(const e of entries) for(const m of (e.meanings||[])) for(const d of (m.definitions||[])){
+    if (d.example) return d.example;
+  }
+  return '';
+}
+
+/* ===== 日本語意味（EJDict → MyMemory翻訳）1件だけ ===== */
+async function translateMyMemory(text){
+  try{
+    const r = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en|ja`);
+    const j = await r.json();
+    return j?.responseData?.translatedText || '';
+  }catch{ return ''; }
+}
+async function getJapaneseMeaning1(word, entries){
+  const hit = _getJaCacheHit(word); if (hit) return hit;
+  let ja = await jaFromEJ(word); let source = 'EJDict';
+  if (!ja){
+    const en = firstEnglishDef(entries)?.def || '';
+    if (en){
+      ja = await translateMyMemory(en);
+      source = ja ? 'MyMemory' : '';
+    }
+  }
+  const item = { text: ja || '', source };
+  _putJaCache(word, item);
+  return item;
+}
+
+/* ===== 例文（Medium 1件のみ、訳はキャッシュ→MyMemory→簡易） ===== */
+async function buildOneExample(word, entries){
+  let en = firstDictExample(entries); let src = 'Dictionary';
+  if (!en) { en = `Please ${word} it again.`; src = 'Template'; }
+  let ja = getCachedTranslation(en);
+  if (!ja) { ja = await translateMyMemory(en); if (!ja) ja = jaParaphrase(en); putCachedTranslation(en, ja); }
+  return { en, ja, source: src, level: 'Medium' };
+}
+function jaParaphrase(en){
+  const s = (en||'').replace(/[.?!]$/,'');
+  let t = s.replace(/\bI\b/g,'私は').replace(/\bYou\b/g,'あなたは').replace(/\bWe\b/g,'私たちは')
+           .replace(/\bThey\b/g,'彼らは').replace(/\bHe\b/g,'彼は').replace(/\bShe\b/g,'彼女は').replace(/\bIt\b/g,'それは');
+  if (!/。$/.test(t)) t += '。';
+  return t;
+}
+
+/* ===== 覚え方（該当時のみ表示） ===== */
+async function buildMnemonics(word){
+  const w = (word||'').toLowerCase();
+  const PREFIX = { pro:'前へ/賛成', pre:'前もって', re:'再び', un:'否定', dis:'反対/分離', mis:'誤り', sub:'下位', inter:'相互', trans:'越えて', auto:'自己', tele:'遠く', micro:'小さい', macro:'大きい', anti:'反' };
+  const SUFFIX = { tion:'名詞化（動作/状態）', sion:'名詞化', ment:'名詞化', ness:'名詞化', ity:'性質', able:'できる', ible:'できる', ous:'〜的', ive:'〜しがち', ist:'〜する人', ism:'主義' };
+  const lines = [];
+  const prefix = Object.keys(PREFIX).find(p => w.startsWith(p) && w.length > p.length + 2);
+  if (prefix) lines.push(`接頭辞「${prefix}-」＝意味の手がかり。語幹 + 「${prefix}-」で覚える。`);
+  const suffix = Object.keys(SUFFIX).find(s => w.endsWith(s) && w.length > s.length + 2);
+  if (suffix) lines.push(`接尾辞「-${suffix}」＝品詞の手がかり。語幹 + 「-${suffix}」で覚える。`);
+  let core = w, tail = '';
+  const SPECIAL_TAILS = ['tion','sion','ture','sure','cious','gious'];
+  for (const t of SPECIAL_TAILS) { if (w.endsWith(t) && w.length > t.length+2) { core = w.slice(0, -t.length); tail = t; break; } }
+  if (!tail && suffix) { core = w.slice(0, -suffix.length); tail = suffix; }
+  const coreChunks = core.match(/[^aeiouy]*[aeiouy]+|[^aeiouy]+/g) || [core];
+  const chunkStr = (tail ? [...coreChunks, tail] : coreChunks).join(' | ');
+  lines.push(`分割: ${chunkStr} と区切って発音・綴りを確認。`);
+  if (w.includes('tion')) lines.push('綴り「tion」は /ʃən/ で読む。');
+  else if (w.includes('sion')) lines.push('綴り「sion」は /ʒən/ または /ʃən/。');
+  else if (w.includes('ph')) lines.push('綴り「ph」は /f/。');
+  return `<ul style="margin:8px 0 0 18px;">${lines.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`;
+}
+
+/* ===== 結果描画 ===== */
+async function renderResult(word, entries){
+  if (!entries.length){ renderTTSOnly(word, '辞書データが見つかりませんでした。フレーズ読み上げモードです。'); return; }
+
+  const ph = collectPhonetics(entries);
+  const ipaHtml = ph.length ? ph.map(x=>x.text?`<span class="ipa">${esc(x.text)}</span>`:'').join(' ')
+                            : `<span class="muted small">IPA情報なし</span>`;
+
+  const jaItem = await getJapaneseMeaning1(word, entries);
+  const jaHtml = jaItem.text ? `<div class="def">${esc(jaItem.text)} <span class="badge">${esc(jaItem.source)}</span></div>`
+                             : `<div class="def"><span class="muted">（見つかりません）</span></div>`;
+
+  const ex = await buildOneExample(word, entries);
+  const exampleHtml = `
+    <div class="def">
+      <div class="badge">Medium</div>
+      <div class="small muted">${esc(ex.source)}</div>
+      <div style="margin-top:4px;">${esc(ex.en)}</div>
+      <div class="small" style="color:#95a3b8;">日本語: ${esc(ex.ja)}</div>
+    </div>`;
+
+  const mnHtml = await buildMnemonics(word);
+
+  resultArea.innerHTML = `
+    <div class="row" style="align-items:flex-end; justify-content:space-between;">
+      <div style="flex:1; min-width:0;">
+        <div class="small muted">単語</div>
+        <h2 class="result-word" title="${esc(word)}" style="margin:4px 0 6px;">${esc(word)}</h2>
+        <div>${ipaHtml}</div>
+      </div>
+      <div class="row" style="flex:0 0 auto; gap:8px;">
+        <button onclick="speakThrice('${esc(word)}', voice1.value, rate1.value, pitch1.value)" class="btn primary">▶︎ 音声その1（3回）</button>
+        <button onclick="speakThrice('${esc(word)}', voice2.value, rate2.value, pitch2.value)" class="btn">🐢 音声その2（3回）</button>
+        <button onclick="speechSynthesis.cancel()" class="btn">■ 停止</button>
+      </div>
+    </div>
+
+    <div class="section-title">日本語の意味</div>
+    ${jaHtml}
+
+    <div class="section-title">例文（Medium）</div>
+    ${exampleHtml}
+
+    <div class="section-title">覚え方（ヒント）</div>
+    <div class="def">${mnHtml}</div>
+  `;
+
+  localStorage.setItem('ph:lastWord', word);
+}
+
+/* ===== TTS：右ペインは1回、ヘッダーは3回 ===== */
+function loadVoices(){
+  voices = speechSynthesis.getVoices().sort((a,b)=> a.lang.localeCompare(b.lang));
+  const opts = voices.map((v,i)=>`<option value="${i}">${esc(v.name)} (${esc(v.lang)})${v.default?' – default':''}</option>`).join('');
+  voice1.innerHTML = opts; voice2.innerHTML = opts;
+  const idx = voices.findIndex(v=>/^en[-_]/i.test(v.lang));
+  if (idx>=0){ voice1.value=String(idx); voice2.value=String(idx); }
+}
+loadVoices();
+if (typeof speechSynthesis !== 'undefined') speechSynthesis.onvoiceschanged = loadVoices;
+
+function speakOnce(text, voiceIdx, rate, pitch){
+  if (!text) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  const v = voices[Number(voiceIdx)||0];
+  if (v) u.voice = v;
+  u.rate = Number(rate)||1; u.pitch = Number(pitch)||1;
+  speechSynthesis.speak(u);
+}
+function speakThrice(text, voiceIdx, rate, pitch){
+  if (!text) return;
+  speechSynthesis.cancel();
+  for (let i=0; i<3; i++){
+    const u = new SpeechSynthesisUtterance(text);
+    const v = voices[Number(voiceIdx)||0];
+    if (v) u.voice = v;
+    u.rate = Number(rate)||1; u.pitch = Number(pitch)||1;
+    speechSynthesis.speak(u);
+  }
+}
+/* 右ペインの再生は1回 */
+playV1.addEventListener('click', ()=>{ const w=currentWord||input.value.trim(); speakOnce(w, voice1.value, rate1.value, pitch1.value); });
+playV2.addEventListener('click', ()=>{ const w=currentWord||input.value.trim(); speakOnce(w, voice2.value, rate2.value, pitch2.value); });
+stopTTS.addEventListener('click', ()=>speechSynthesis.cancel());
+
+/* ===== Events ===== */
+btnLookup.addEventListener('click', ()=>{ const w=input.value.trim(); if(w) lookup(w); });
+btnClear.addEventListener('click', ()=>{ input.value=''; resultArea.innerHTML='<div class="muted">単語またはフレーズを入力して検索してください。</div>'; hideSuggest(); });
+input.addEventListener('keydown', (e)=>{ if (suggestBox.classList.contains('hidden') && e.key==='Enter') btnLookup.click(); });
+
+/* 起動時：前回の単語/フレーズ */
+const last = localStorage.getItem('ph:lastWord');
+if (last){ input.value=last; lookup(last); }
+</script>
+</body>
+</html>
